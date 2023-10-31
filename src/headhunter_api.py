@@ -1,6 +1,7 @@
 import requests
 import json
 import os
+import argparse
 
 
 class HeadHunter:
@@ -74,3 +75,40 @@ vacancies_data = hh.get_vacancies_api(text="python", area=1, per_page=50)
 file_path = os.path.join("src/data_json_employers", "vacancy.json")
 with open(file_path, 'w', encoding="utf-8") as file:
     json.dump(vacancies_data, file, ensure_ascii=False, indent=2)
+# Создание парсера аргументов командной строки
+parser = argparse.ArgumentParser(description="Программа для работы с вакансиями")
+
+# Добавление аргументов
+parser.add_argument("--employer_ids", nargs="+", type=int, help="Список идентификаторов компаний")
+parser.add_argument("--per_page", type=int, help="Количество вакансий на странице")
+
+# Парсинг аргументов
+args = parser.parse_args()
+
+# Получение значений аргументов
+employer_ids = args.employer_ids
+per_page = args.per_page
+
+# Ввод запроса от пользователя
+search_query = input("Введите поисковый запрос: ")
+
+# Создание экземпляра класса HeadHunter
+hh = HeadHunter()
+
+# Проверка аргументов и выполнение соответствующих действий
+if search_query:
+    vacancies_data = hh.get_vacancies_api(text=search_query, per_page=per_page)
+    file_path = os.path.join("src/data_json_employers", "vacancy.json")
+    with open(file_path, 'w', encoding="utf-8") as file:
+        json.dump(vacancies_data, file, ensure_ascii=False, indent=2)
+
+if employer_ids:
+    for employer_id in employer_ids:
+        company_name = hh.get_company_name(employer_id)
+        if company_name is not None:
+            file_path = os.path.join("src/data_json_employers", f"{employer_id}.json")
+            with open(file_path, 'w', encoding="utf-8") as f:
+                json.dump({"название": company_name}, f, ensure_ascii=False, indent=2)
+
+# Получение информации о вакансиях и сохранение в файл
+hh.get_json_files()
